@@ -58,6 +58,7 @@ type ReservationAdminRow = {
   deposit_amount: number;
   contract_accepted_at: string | null;
   created_at: string;
+  guest_document_count?: number;
 };
 
 function dateToLocalYmd(d: Date): string {
@@ -803,6 +804,10 @@ export function AdminDashboard() {
                 </p>
                 <p className="mt-1 text-xs text-[var(--charcoal)]/60">
                   Estancia: {r.booking_status} · Pago: {r.payment_status}
+                  {" · "}
+                  <a href={`/admin/reservations/${r.id}#documentos-huesped`} className="underline">
+                    Documentos: {r.guest_document_count ?? 0}
+                  </a>
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {r.booking_status !== "confirmed" &&

@@ -6,6 +6,7 @@ import { useI18n } from "@/components/providers/LanguageProvider";
 import { guestMayCancelByLeadTime } from "@/lib/dates/ymd-local";
 import { guestSeesHostConfirmedContent } from "@/lib/guest/reservation-redact";
 import { isAllowedExternalDocUrl } from "@/lib/lease-template-urls";
+import { GuestDocumentsPanel } from "@/components/guest/GuestDocumentsPanel";
 import { StayPaymentPanel } from "@/components/guest/StayPaymentPanel";
 
 type ReservationDetail = {
@@ -199,6 +200,10 @@ export default function GuestReservationDetailPage({
                 </div>
               ) : null}
             </section>
+
+            {row && !isCancelled ? (
+              <GuestDocumentsPanel reservationId={row.id} stayType={row.stay_type} />
+            ) : null}
 
             {row && !hostAccepted && !isCancelled ? (
               <section className="rounded-2xl border border-[var(--dove-grey)]/70 bg-white p-5 text-sm text-[var(--charcoal)]/80">

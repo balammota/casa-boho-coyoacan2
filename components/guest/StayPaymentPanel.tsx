@@ -16,21 +16,8 @@ const BANK_TRANSFER_MXN = {
 /** Zelle (USD); mismo número que aparece en la app. */
 const ZELLE_PHONE_DISPLAY = "+1 (725) 260-6690";
 
-/** URL https donde el huésped abre la captura del QR (p. ej. Google Drive). */
-function zelleQrPageUrl(): string | null {
-  const primary = process.env.NEXT_PUBLIC_ZELLE_QR_LINK?.trim() ?? "";
-  const legacy = process.env.NEXT_PUBLIC_ZELLE_QR_IMAGE_URL?.trim() ?? "";
-  for (const raw of [primary, legacy]) {
-    if (!raw) continue;
-    try {
-      const u = new URL(raw);
-      if (u.protocol === "https:") return u.toString();
-    } catch {
-      /* ignore */
-    }
-  }
-  return null;
-}
+/** QR estático en `public/images/Balams_qr_code.jpeg`. */
+const ZELLE_QR_PUBLIC_PATH = "/images/Balams_qr_code.jpeg";
 
 export type StayPaymentPanelRow = {
   public_id: string;
@@ -69,8 +56,6 @@ export function StayPaymentPanel({ row }: { row: StayPaymentPanelRow }) {
   const signingDate = format(parseISO(row.check_in), "EEEE d MMMM yyyy", {
     locale: dateLocale,
   });
-  const zelleQrLink = zelleQrPageUrl();
-
   const intro = isLong
     ? getLongStayPaymentInstructions(locale)
     : getShortStayPaymentInstructions(locale);
@@ -204,25 +189,15 @@ export function StayPaymentPanel({ row }: { row: StayPaymentPanelRow }) {
             <p className="mt-1 font-mono text-sm font-semibold text-[var(--charcoal)]">
               {ZELLE_PHONE_DISPLAY}
             </p>
-            {zelleQrLink ? (
-              <p className="mt-3 text-sm">
-                <a
-                  href={zelleQrLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold text-[var(--gold)] underline decoration-[var(--gold)]/40 underline-offset-2 hover:decoration-[var(--gold)]"
-                >
-                  {t("guestPortal.detail.longStayPayZelleQrLinkCta")}
-                </a>
-                <span className="mt-1 block text-xs font-normal text-[var(--charcoal)]/65">
-                  {t("guestPortal.detail.longStayPayZelleQrLinkHint")}
-                </span>
-              </p>
-            ) : (
-              <p className="mt-3 text-xs text-[var(--charcoal)]/65">
-                {t("guestPortal.detail.longStayPayZelleQrLinkMissing")}
-              </p>
-            )}
+            <div className="mt-3 flex justify-center">
+              <img
+                src={ZELLE_QR_PUBLIC_PATH}
+                alt={t("guestPortal.detail.longStayPayZelleQrAlt")}
+                width={240}
+                height={240}
+                className="max-h-64 max-w-[min(100%,260px)] rounded-lg border border-[var(--dove-grey)]/40 bg-white object-contain p-2"
+              />
+            </div>
           </div>
         ) : null}
 

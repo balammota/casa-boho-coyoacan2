@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdminUser } from "@/lib/auth/admin-guard";
 import { sendGuestReservationNotify } from "@/lib/email/guest-reservation-notify";
+import { sendGuestStaySurveyEmail } from "@/lib/email/guest-survey-notify";
 import { assertSameOrigin } from "@/lib/security/request-guards";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
@@ -54,7 +55,29 @@ export async function GET(request: Request) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 502 });
   }
-  return NextResponse.json({ reservations: data ?? [] });
+
+  const reservations = data ?? [];
+  const ids = reservations.map((r: { id: string }) => r.id);
+  const countMap = new Map<string, number>();
+  if (ids.length > 0) {
+    const { data: docRows, error: docErr } = await supabase
+      .from("guest_reservation_documents")
+      .select("reservation_id")
+      .in("reservation_id", ids);
+    if (!docErr && docRows) {
+      for (const row of docRows) {
+        const rid = String((row as { reservation_id: string }).reservation_id);
+        countMap.set(rid, (countMap.get(rid) ?? 0) + 1);
+      }
+    }
+  }
+
+  const withCounts = reservations.map((r: { id: string }) => ({
+    ...r,
+    guest_document_count: countMap.get(r.id) ?? 0,
+  }));
+
+  return NextResponse.json({ reservations: withCounts });
 }
 
 export async function PATCH(request: Request) {
@@ -290,6 +313,8 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Invalid status." }, { status: 400 });
   }
 
+  const wasCompleted = row.booking_status === "completed";
+
   const { error } = await supabase
     .from("reservations")
     .update({
@@ -311,6 +336,15 @@ export async function PATCH(request: Request) {
       updated_at: now,
     })
     .eq("reservation_id", reservationId);
+
+  if (status === "completed" && !wasCompleted) {
+    await sendGuestStaySurveyEmail({
+      request,
+      guestName: row.guest_name,
+      guestEmail: row.guest_email,
+      publicId: row.public_id,
+    });
+  }
 
   return NextResponse.json({ ok: true });
 }
