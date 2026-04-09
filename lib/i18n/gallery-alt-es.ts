@@ -1,0 +1,20 @@
+/** Textos alt en español por id de imagen (data/gallery). */
+export const galleryAltEs: Record<number, string> = {
+  1: "Sala principal",
+  2: "Sala",
+  3: "Espacio de sala",
+  4: "Comedor",
+  5: "Recámara",
+  6: "Recámara",
+  7: "Baño completo",
+  8: "Medio baño",
+  9: "Cocina",
+  10: "Cocina",
+  11: "Cocina",
+  12: "Cocina",
+  13: "Área de lavado",
+  14: "Patio",
+  15: "Exterior",
+  16: "Exterior",
+  17: "Exterior",
+};

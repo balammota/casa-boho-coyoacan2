@@ -9,8 +9,16 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        blush: "var(--blush-pink)",
+        ivory: "var(--ivory)",
+        dove: "var(--dove-grey)",
+        gold: "var(--gold)",
+        "dark-gold": "var(--dark-gold)",
+        charcoal: "var(--charcoal)",
+      },
+      fontFamily: {
+        heading: ["var(--heading-font)", "serif"],
+        body: ["var(--body-font)", "sans-serif"],
       },
     },
   },

@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --blush-pink: #ffe4e1;
+  --ivory: #fff8f7;
+  --dove-grey: #eae0e0;
+  --gold: #daa520;
+  --dark-gold: #b8860b;
+  --charcoal: #363636;
+  --white: #ffffff;
+
+  --heading-font: var(--font-playfair), "Playfair Display", serif;
+  --body-font: var(--font-lato), "Lato", sans-serif;
+
+  --background: var(--ivory);
+  --foreground: var(--charcoal);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--body-font);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--heading-font);
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .shadow-soft {
+    box-shadow: 0 12px 40px -12px rgba(54, 54, 54, 0.12),
+      0 4px 16px -4px rgba(218, 165, 32, 0.08);
+  }
+
+  .shadow-soft-lg {
+    box-shadow: 0 24px 64px -16px rgba(54, 54, 54, 0.14),
+      0 8px 24px -8px rgba(218, 165, 32, 0.1);
+  }
+}
+
+/* react-day-picker — Book a tour / availability */
+.book-tour-calendar .rdp-root {
+  --rdp-accent-color: var(--gold);
+  --rdp-accent-background-color: var(--blush-pink);
+  --rdp-range_start-color: var(--white);
+  --rdp-range_end-color: var(--white);
+  margin-inline: auto;
+}
+
+.book-tour-calendar .rdp-day_button {
+  border-radius: 999px;
+}
+
+.book-tour-calendar .rdp-day.booked .rdp-day_button {
+  background-color: #dc2626;
+  color: var(--white);
+  text-decoration: line-through;
+  opacity: 1;
+  border-color: #b91c1c;
+}
+
+/* Admin: bloqueos (rojo) y selección pendiente (dorado) */
+.admin-block-calendar .rdp-root {
+  --rdp-accent-color: var(--gold);
+  --rdp-accent-background-color: var(--blush-pink);
+  margin-inline: auto;
+}
+
+.admin-block-calendar .rdp-day_button {
+  border-radius: 999px;
+}
+
+.admin-block-calendar .rdp-day.admin-cal-blocked .rdp-day_button {
+  background-color: #dc2626;
+  color: var(--white);
+  border-color: #b91c1c;
+}
+
+.admin-block-calendar .rdp-day.admin-cal-pending .rdp-day_button {
+  box-shadow: inset 0 0 0 2px var(--gold);
+  background-color: color-mix(in srgb, var(--blush-pink) 85%, var(--white));
+  font-weight: 600;
+}
