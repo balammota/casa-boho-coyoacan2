@@ -66,14 +66,20 @@ h4 {
 
 @media (max-width: 499px) {
   .book-tour-calendar .rdp-root {
-    --rdp-day-width: 36px;
-    --rdp-day-height: 36px;
-    --rdp-day_button-width: 36px;
-    --rdp-day_button-height: 36px;
-    --rdp-nav_button-width: 30px;
-    --rdp-nav_button-height: 30px;
-    --rdp-months-gap: 8px;
+    --rdp-day-width: 34px;
+    --rdp-day-height: 34px;
+    --rdp-day_button-width: 32px;
+    --rdp-day_button-height: 32px;
+    --rdp-nav_button-width: 28px;
+    --rdp-nav_button-height: 28px;
+    --rdp-nav-height: 2.35rem;
+    --rdp-months-gap: 6px;
+    font-size: 0.85rem;
+  }
+
+  .book-tour-calendar .rdp-month_caption {
     font-size: 0.9rem;
+    font-weight: 600;
   }
 }
 
@@ -89,7 +95,25 @@ h4 {
 .admin-block-calendar .rdp-root {
   --rdp-accent-color: var(--gold);
   --rdp-accent-background-color: var(--blush-pink);
+  --rdp-day-width: 38px;
+  --rdp-day-height: 38px;
+  --rdp-day_button-width: 36px;
+  --rdp-day_button-height: 36px;
+  --rdp-nav_button-width: 2rem;
+  --rdp-nav_button-height: 2rem;
+  --rdp-nav-height: 2.4rem;
+  --rdp-months-gap: 0.75rem;
   margin-inline: auto;
+  font-size: 0.875rem;
+}
+
+.admin-block-calendar .rdp-month_caption {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.admin-block-calendar .rdp-months {
+  max-width: none;
 }
 
 .admin-block-calendar .rdp-day_button {

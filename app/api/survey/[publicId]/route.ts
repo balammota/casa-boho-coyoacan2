@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { notifyHostSurveySubmitted } from "@/lib/email/notify-host-survey-submitted";
 import { assertSameOrigin } from "@/lib/security/request-guards";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
@@ -105,7 +106,7 @@ export async function POST(
   const supabase = createAdminSupabaseClient();
   const { data: res, error: resErr } = await supabase
     .from("reservations")
-    .select("id, booking_status, public_id")
+    .select("id, booking_status, public_id, guest_name, guest_email")
     .eq("public_id", publicId)
     .maybeSingle();
 
@@ -151,6 +152,20 @@ export async function POST(
     }
     return NextResponse.json({ error: insErr.message }, { status: 502 });
   }
+
+  void notifyHostSurveySubmitted({
+    request,
+    reservationId: res.id,
+    publicId: String(res.public_id ?? publicId),
+    guestName: String(res.guest_name ?? "").trim() || "Huésped",
+    guestEmail: String(res.guest_email ?? "").trim() || "—",
+    ratingOverall: body.ratingOverall,
+    ratingClean: body.ratingClean,
+    ratingComfort: body.ratingComfort,
+    ratingRecommend: body.ratingRecommend,
+    comments: body.comments.trim(),
+    consentPublish: consent,
+  }).catch((e) => console.error("[survey POST] notify host:", e));
 
   return NextResponse.json({ ok: true });
 }

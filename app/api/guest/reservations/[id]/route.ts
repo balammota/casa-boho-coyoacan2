@@ -6,6 +6,7 @@ import { guestMayCancelByLeadTime } from "@/lib/dates/ymd-local";
 import { buildContractText } from "@/lib/reservations/contracts";
 import { getLongStayPaymentInstructions } from "@/lib/reservations/long-stay-payment-instructions";
 import { getShortStayPaymentInstructions } from "@/lib/reservations/short-stay-payment-instructions";
+import { removeReservationHoldBlock } from "@/lib/booking/reservation-hold-block";
 import { assertSameOrigin } from "@/lib/security/request-guards";
 import { notifyHostGuestCancelled } from "@/lib/email/notify-host-guest-cancel";
 import { redactReservationForGuestResponse } from "@/lib/guest/reservation-redact";
@@ -128,6 +129,8 @@ export async function PATCH(
     if (cancelErr) {
       return NextResponse.json({ error: cancelErr.message }, { status: 502 });
     }
+
+    await removeReservationHoldBlock(supabase, reservationId);
 
     await supabase
       .from("payments")

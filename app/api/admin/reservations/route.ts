@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { requireAdminUser } from "@/lib/auth/admin-guard";
 import { sendGuestReservationNotify } from "@/lib/email/guest-reservation-notify";
 import { assertSameOrigin } from "@/lib/security/request-guards";
+import {
+  removeReservationHoldBlock,
+  syncReservationHoldBlock,
+} from "@/lib/booking/reservation-hold-block";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
@@ -17,6 +21,8 @@ type ReservationRow = {
   public_id: string;
   currency: string;
   notes: string | null;
+  check_in: string;
+  check_out: string;
 };
 
 function appendAdminCancellationNote(existing: string | null, message: string): string {
@@ -116,7 +122,7 @@ export async function PATCH(request: Request) {
   const { data: reservation, error: fetchErr } = await supabase
     .from("reservations")
     .select(
-      "id, booking_status, payment_status, total_amount, guest_name, guest_email, public_id, currency, notes"
+      "id, booking_status, payment_status, total_amount, guest_name, guest_email, public_id, currency, notes, check_in, check_out"
     )
     .eq("id", reservationId)
     .single();
@@ -151,6 +157,13 @@ export async function PATCH(request: Request) {
     if (upErr) {
       return NextResponse.json({ error: upErr.message }, { status: 502 });
     }
+
+    await syncReservationHoldBlock(
+      supabase,
+      reservationId,
+      String(row.check_in ?? ""),
+      String(row.check_out ?? "")
+    );
 
     await sendGuestReservationNotify({
       request,
@@ -283,6 +296,8 @@ export async function PATCH(request: Request) {
     if (upRes) {
       return NextResponse.json({ error: upRes.message }, { status: 502 });
     }
+
+    await removeReservationHoldBlock(supabase, reservationId);
 
     await supabase
       .from("payments")

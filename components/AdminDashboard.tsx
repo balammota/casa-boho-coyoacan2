@@ -412,6 +412,8 @@ export function AdminDashboard() {
       setCancelModalId(null);
       setCancelMessage("");
       await loadReservations();
+      await loadAll();
+      notifyBookingDataChanged();
     } catch {
       setReservationMsg("Error de red al cancelar.");
     } finally {
@@ -433,6 +435,8 @@ export function AdminDashboard() {
         return;
       }
       await loadReservations();
+      await loadAll();
+      notifyBookingDataChanged();
     } catch {
       setReservationMsg("Error de red al confirmar la estancia.");
     }
