@@ -2,6 +2,7 @@
 
 import { format, parseISO } from "date-fns";
 import { enUS, es as esLocale } from "date-fns/locale";
+import { useMemo, useState } from "react";
 import { useI18n } from "@/components/providers/LanguageProvider";
 import { getLongStayPaymentInstructions } from "@/lib/reservations/long-stay-payment-instructions";
 import { getShortStayPaymentInstructions } from "@/lib/reservations/short-stay-payment-instructions";
@@ -28,6 +29,7 @@ export type StayPaymentPanelRow = {
   cleaning_fee: number;
   currency: "MXN" | "USD";
 };
+type MoneyCurrency = "MXN" | "USD";
 
 function formatMoney(amount: number, currency: "MXN" | "USD", lang: "es" | "en") {
   const localeTag = lang === "es" ? "es-MX" : "en-US";
@@ -42,6 +44,19 @@ export function StayPaymentPanel({ row }: { row: StayPaymentPanelRow }) {
   const { t, locale } = useI18n();
   const lang = locale === "en" ? "en" : "es";
   const isLong = row.contract_type === "long_stay_contract";
+  const [displayCurrency, setDisplayCurrency] = useState<MoneyCurrency>(row.currency);
+  const mxnPerUsd = useMemo(() => {
+    const raw = Number(process.env.NEXT_PUBLIC_MXN_PER_USD ?? "17");
+    return Number.isFinite(raw) && raw > 0 ? raw : 17;
+  }, []);
+
+  const toDisplay = (amount: number): number => {
+    if (displayCurrency === row.currency) return amount;
+    if (row.currency === "MXN" && displayCurrency === "USD") return amount / mxnPerUsd;
+    return amount * mxnPerUsd;
+  };
+
+  const money = (amount: number) => formatMoney(toDisplay(amount), displayCurrency, lang);
 
   const monthly = row.deposit_amount;
   const deposit = row.deposit_amount;
@@ -110,19 +125,19 @@ export function StayPaymentPanel({ row }: { row: StayPaymentPanelRow }) {
             <li className="flex flex-wrap justify-between gap-2">
               <span>{t("guestPortal.detail.longStayPayFirstMonth")}</span>
               <span className="font-semibold tabular-nums">
-                {formatMoney(monthly, row.currency, lang)}
+                {money(monthly)}
               </span>
             </li>
             <li className="flex flex-wrap justify-between gap-2">
               <span>{t("guestPortal.detail.longStayPayDepositLine")}</span>
               <span className="font-semibold tabular-nums">
-                {formatMoney(deposit, row.currency, lang)}
+                {money(deposit)}
               </span>
             </li>
             <li className="flex flex-wrap justify-between gap-2 border-t border-[var(--dove-grey)]/50 pt-2 text-base">
               <span className="font-semibold">{t("guestPortal.detail.longStayPayTotal")}</span>
               <span className="font-bold tabular-nums text-[var(--charcoal)]">
-                {formatMoney(longTotal, row.currency, lang)}
+                {money(longTotal)}
               </span>
             </li>
           </ul>
@@ -131,25 +146,45 @@ export function StayPaymentPanel({ row }: { row: StayPaymentPanelRow }) {
             <li className="flex flex-wrap justify-between gap-2">
               <span>{t("guestPortal.detail.shortStayPayQuotedTotal")}</span>
               <span className="font-semibold tabular-nums">
-                {formatMoney(shortStayQuoted, row.currency, lang)}
+                {money(shortStayQuoted)}
               </span>
             </li>
             {cleaning > 0 ? (
               <li className="flex flex-wrap justify-between gap-2">
                 <span>{t("guestPortal.detail.shortStayPayCleaningFee")}</span>
                 <span className="font-semibold tabular-nums">
-                  {formatMoney(cleaning, row.currency, lang)}
+                  {money(cleaning)}
                 </span>
               </li>
             ) : null}
             <li className="flex flex-wrap justify-between gap-2 border-t border-[var(--dove-grey)]/50 pt-2 text-base">
               <span className="font-semibold">{t("guestPortal.detail.shortStayPayTotalDue")}</span>
               <span className="font-bold tabular-nums text-[var(--charcoal)]">
-                {formatMoney(shortGrandTotal, row.currency, lang)}
+                {money(shortGrandTotal)}
               </span>
             </li>
           </ul>
         )}
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-[var(--dove-grey)]/50 pt-3">
+          <span className="text-xs text-[var(--charcoal)]/65">{t("guestPortal.detail.viewAmountsIn")}</span>
+          <div className="inline-flex rounded-full border border-[var(--dove-grey)]/70 bg-white p-1">
+            {(["MXN", "USD"] as const).map((cur) => (
+              <button
+                key={cur}
+                type="button"
+                onClick={() => setDisplayCurrency(cur)}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                  displayCurrency === cur
+                    ? "bg-[var(--gold)] text-white"
+                    : "text-[var(--charcoal)]/75"
+                }`}
+                aria-pressed={displayCurrency === cur}
+              >
+                {cur}
+              </button>
+            ))}
+          </div>
+        </div>
         <p className="mt-4 text-sm leading-relaxed text-[var(--charcoal)]/80">
           <span className="font-semibold">
             {isLong
@@ -162,7 +197,10 @@ export function StayPaymentPanel({ row }: { row: StayPaymentPanelRow }) {
       </div>
 
       <p className="text-xs font-medium text-amber-800/90">
-        {t("guestPortal.detail.longStayPayPlaceholderWarning")}
+        {t("guestPortal.detail.longStayPayPlaceholderWarning")}{" "}
+        <span className="font-normal text-[var(--charcoal)]/80">
+          {t("guestPortal.detail.fxApprox", { rate: mxnPerUsd.toFixed(2) })}
+        </span>
       </p>
 
       <div className="space-y-3">
@@ -207,7 +245,7 @@ export function StayPaymentPanel({ row }: { row: StayPaymentPanelRow }) {
           </p>
           <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-[var(--charcoal)]/85">
             {t("guestPortal.detail.longStayPayCashInstructions", {
-              total: formatMoney(cashEnvelopeTotal, row.currency, lang),
+              total: money(cashEnvelopeTotal),
             })}
           </p>
         </div>

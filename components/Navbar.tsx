@@ -140,7 +140,7 @@ export function Navbar() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 lg:hidden">
+        <div className="hidden items-center gap-2 min-[500px]:flex lg:hidden">
           <a
             href="#book-tour"
             className="rounded-full bg-[var(--gold)] px-3.5 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--white)] shadow-soft"
@@ -178,12 +178,36 @@ export function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
-            className={`mt-3 rounded-2xl p-4 shadow-soft-lg backdrop-blur-md ${
+            className={`mt-3 max-h-[calc(100vh-7.5rem)] overflow-y-auto overscroll-contain rounded-2xl p-4 shadow-soft-lg backdrop-blur-md ${
               scrolled
                 ? "border border-[var(--dove-grey)]/60 bg-[var(--white)]/95"
                 : "border border-white/30 bg-[var(--charcoal)]/50"
             }`}
           >
+            <div className="mb-4 grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
+              <a
+                href="#book-tour"
+                className={`rounded-full px-4 py-2.5 text-center text-sm font-semibold text-[var(--white)] transition-all ${
+                  scrolled
+                    ? "bg-[var(--gold)] hover:bg-[var(--dark-gold)]"
+                    : "bg-[var(--gold)]/90 hover:bg-[var(--gold)]"
+                }`}
+                onClick={() => setOpen(false)}
+              >
+                {t("nav.bookTour")}
+              </a>
+              <Link
+                href="/guest"
+                className={`rounded-full px-4 py-2.5 text-center text-sm font-semibold transition-colors ${
+                  scrolled
+                    ? "border border-[var(--dove-grey)]/70 text-[var(--charcoal)] hover:border-[var(--gold)]/50 hover:text-[var(--dark-gold)]"
+                    : "border border-white/40 text-[var(--white)] hover:border-white/70 hover:text-[var(--ivory)]"
+                }`}
+                onClick={() => setOpen(false)}
+              >
+                {t("footer.guestPortal")}
+              </Link>
+            </div>
             <ul className="flex flex-col gap-1">
               {navHrefs.map((href, i) => {
                 return (

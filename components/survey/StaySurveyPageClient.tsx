@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/providers/LanguageProvider";
+import type { Locale } from "@/lib/i18n/types";
 
 type Phase =
   | "loading"
@@ -56,7 +57,7 @@ function RatingRow({ label, scalePrefix, value, onChange, t }: RowProps) {
 }
 
 export function StaySurveyPageClient({ publicId }: { publicId: string }) {
-  const { t } = useI18n();
+  const { t, locale, setLocale } = useI18n();
   const [phase, setPhase] = useState<Phase>("loading");
   const [ratingOverall, setRatingOverall] = useState<number | null>(null);
   const [ratingClean, setRatingClean] = useState<number | null>(null);
@@ -161,6 +162,28 @@ export function StaySurveyPageClient({ publicId }: { publicId: string }) {
         <h1 className="mt-2 text-center font-[family-name:var(--heading-font)] text-2xl font-semibold md:text-3xl">
           {t("staySurvey.pageTitle")}
         </h1>
+        <div
+          className="mt-4 flex flex-wrap items-center justify-center gap-2"
+          role="group"
+          aria-label={t("nav.language")}
+        >
+          <span className="text-xs text-[var(--charcoal)]/55">{t("nav.language")}:</span>
+          {(["en", "es"] as const).map((code) => (
+            <button
+              key={code}
+              type="button"
+              onClick={() => setLocale(code as Locale)}
+              aria-pressed={locale === code}
+              className={`rounded-lg px-2.5 py-1 text-xs font-bold uppercase tracking-wide transition-colors ${
+                locale === code
+                  ? "bg-[var(--gold)] text-[var(--white)]"
+                  : "text-[var(--charcoal)]/60 hover:bg-[var(--blush-pink)]/50 hover:text-[var(--charcoal)]"
+              }`}
+            >
+              {code === "en" ? t("nav.english") : t("nav.spanish")}
+            </button>
+          ))}
+        </div>
 
         {phase === "loading" ? (
           <p className="mt-10 text-center text-sm text-[var(--charcoal)]/70">
@@ -208,9 +231,6 @@ export function StaySurveyPageClient({ publicId }: { publicId: string }) {
           <div className="mt-8">
             <p className="text-center text-sm text-[var(--charcoal)]/80">
               {t("staySurvey.intro")}
-            </p>
-            <p className="mt-2 text-center text-xs text-[var(--charcoal)]/60">
-              {t("staySurvey.langHint")}
             </p>
 
             <div className="mt-8 rounded-2xl border border-[var(--dove-grey)] bg-[var(--white)]/80 p-6 shadow-sm">

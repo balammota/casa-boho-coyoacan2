@@ -139,60 +139,6 @@ export function BookTour() {
     );
   }, [quote, locale]);
 
-  const mailtoHref = useMemo(() => {
-    const base =
-      "mailto:contacto@casabohocoyoacan.com?subject=" +
-      encodeURIComponent(t("bookTour.mailSubject"));
-    if (!range?.from || !range?.to || !quote || !contactComplete) return base;
-
-    const contactBlock = [
-      `${t("bookTour.mailName")}`,
-      name.trim(),
-      "",
-      `${t("bookTour.mailEmail")}`,
-      email.trim(),
-      "",
-      `${t("bookTour.mailPhone")}`,
-      fullPhone,
-      "",
-      ...(message.trim()
-        ? [`${t("bookTour.mailMessage")}`, message.trim(), ""]
-        : []),
-    ];
-
-    const body = [
-      ...contactBlock,
-      t("bookTour.mailSep"),
-      `${t("bookTour.mailCheckIn")} ${format(range.from, "PPP", { locale: dateLocale })}`,
-      `${t("bookTour.mailCheckOut")} ${format(range.to, "PPP", { locale: dateLocale })}`,
-      `${t("bookTour.mailNights")} ${quote.nights}`,
-      `${t("bookTour.mailGuests")} ${guests} ${t("bookTour.mailGuestsMax", { max: MAX_GUESTS })}`,
-      "",
-      t("bookTour.mailEstimated"),
-      ...labeledBreakdown.map(
-        (l) =>
-          `  • ${l.label}: ${formatMoneyAmount(l.amount, currency)}`
-      ),
-      `  — ${t("bookTour.mailTotal")} ${formatMoneyAmount(quote.total, currency)}`,
-      "",
-      t("bookTour.mailBodyClosing"),
-    ].join("\n");
-    return `${base}&body=${encodeURIComponent(body)}`;
-  }, [
-    range,
-    quote,
-    guests,
-    name,
-    email,
-    fullPhone,
-    message,
-    contactComplete,
-    t,
-    labeledBreakdown,
-    currency,
-    dateLocale,
-  ]);
-
   const rangeFromKey = range?.from?.getTime() ?? null;
   const rangeToKey = range?.to?.getTime() ?? null;
 
@@ -351,7 +297,7 @@ export function BookTour() {
                     </p>
                   )}
 
-                  <div className="book-tour-calendar mt-8 flex justify-center overflow-x-auto">
+                  <div className="book-tour-calendar mt-8 flex justify-center overflow-x-hidden">
                     <DayPicker
                       mode="range"
                       locale={dateLocale}
@@ -660,20 +606,6 @@ export function BookTour() {
                           : t("bookTour.sendRequest")}
                     </button>
 
-                    <p className="text-center text-xs text-[var(--charcoal)]/50">
-                      <a
-                        href={mailtoHref}
-                        className={`font-semibold underline decoration-[var(--gold)]/50 underline-offset-2 ${
-                          quote && contactComplete
-                            ? "text-[var(--gold)] hover:text-[var(--dark-gold)]"
-                            : "pointer-events-none text-[var(--charcoal)]/30"
-                        }`}
-                        aria-disabled={!quote || !contactComplete}
-                        tabIndex={quote && contactComplete ? 0 : -1}
-                      >
-                        {t("bookTour.mailtoFallback")}
-                      </a>
-                    </p>
                   </div>
                 </div>
               </motion.div>

@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireGuestUser } from "@/lib/auth/guest-guard";
+import { notifyHostGuestDocumentUploaded } from "@/lib/email/notify-host-guest-document-uploaded";
 import { guestCanAccessReservation } from "@/lib/guest/reservation-access";
 import { assertSameOrigin } from "@/lib/security/request-guards";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
@@ -33,7 +34,7 @@ async function loadReservationForGuest(
 ) {
   const { data, error } = await supabase
     .from("reservations")
-    .select("id, guest_user_id, guest_email, booking_status")
+    .select("id, public_id, guest_name, guest_user_id, guest_email, booking_status")
     .eq("id", reservationId)
     .single();
   if (error || !data) {
@@ -214,6 +215,21 @@ export async function POST(
   const { data: signed } = await supabase.storage
     .from(BUCKET)
     .createSignedUrl(storagePath, 3600);
+
+  try {
+    await notifyHostGuestDocumentUploaded({
+      request,
+      reservationId,
+      publicId: String(access.row.public_id ?? ""),
+      guestName: String(access.row.guest_name ?? ""),
+      guestEmail: String(access.row.guest_email ?? auth.email),
+      fileName: String(inserted.original_filename ?? file.name),
+      category: document_category,
+      fileSize: Number(inserted.file_size ?? file.size),
+    });
+  } catch (emailErr) {
+    console.error("[guest/documents] host notify error:", emailErr);
+  }
 
   return NextResponse.json({
     document: {

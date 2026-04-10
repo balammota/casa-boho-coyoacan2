@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdminUser } from "@/lib/auth/admin-guard";
 import { sendGuestReservationNotify } from "@/lib/email/guest-reservation-notify";
-import { sendGuestStaySurveyEmail } from "@/lib/email/guest-survey-notify";
 import { assertSameOrigin } from "@/lib/security/request-guards";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
@@ -314,12 +313,18 @@ export async function PATCH(request: Request) {
   }
 
   const wasCompleted = row.booking_status === "completed";
+  const nextPaymentStatus =
+    status === "completed"
+      ? row.payment_status === "cancelled"
+        ? "cancelled"
+        : "confirmed"
+      : status;
 
   const { error } = await supabase
     .from("reservations")
     .update({
       booking_status: status,
-      payment_status: status,
+      payment_status: nextPaymentStatus,
       updated_at: now,
     })
     .eq("id", reservationId);
@@ -329,20 +334,30 @@ export async function PATCH(request: Request) {
 
   await supabase
     .from("payments")
-    .update({
-      status,
-      confirmed_at: null,
-      confirmed_by: null,
-      updated_at: now,
-    })
+    .update(
+      status === "completed"
+        ? {
+            status: nextPaymentStatus,
+            updated_at: now,
+          }
+        : {
+            status: nextPaymentStatus,
+            confirmed_at: null,
+            confirmed_by: null,
+            updated_at: now,
+          }
+    )
     .eq("reservation_id", reservationId);
 
   if (status === "completed" && !wasCompleted) {
-    await sendGuestStaySurveyEmail({
+    await sendGuestReservationNotify({
       request,
+      kind: "stay_completed_survey",
       guestName: row.guest_name,
       guestEmail: row.guest_email,
       publicId: row.public_id,
+      reservationId,
+      currency,
     });
   }
 

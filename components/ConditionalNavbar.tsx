@@ -5,6 +5,12 @@ import { Navbar } from "@/components/Navbar";
 
 export function ConditionalNavbar() {
   const pathname = usePathname();
-  if (pathname?.startsWith("/admin") || pathname?.startsWith("/guest")) return null;
+  if (
+    pathname?.startsWith("/admin") ||
+    pathname?.startsWith("/guest") ||
+    pathname?.startsWith("/survey")
+  ) {
+    return null;
+  }
   return <Navbar />;
 }

@@ -201,10 +201,6 @@ export default function GuestReservationDetailPage({
               ) : null}
             </section>
 
-            {row && !isCancelled ? (
-              <GuestDocumentsPanel reservationId={row.id} stayType={row.stay_type} />
-            ) : null}
-
             {row && !hostAccepted && !isCancelled ? (
               <section className="rounded-2xl border border-[var(--dove-grey)]/70 bg-white p-5 text-sm text-[var(--charcoal)]/80">
                 <p className="leading-relaxed">
@@ -262,6 +258,8 @@ export default function GuestReservationDetailPage({
                     {t("guestPortal.detail.leaseContractSignInPerson")}
                   </p>
                 </section>
+
+                <GuestDocumentsPanel reservationId={row.id} stayType={row.stay_type} />
 
                 <section className="rounded-2xl border border-[var(--dove-grey)]/70 bg-white p-5 text-sm">
                   <h2 className="font-[family-name:var(--heading-font)] text-lg font-semibold text-[var(--charcoal)]">

@@ -375,6 +375,8 @@ export const en: MessageTree = {
       shortStayPayQuotedTotal: "Quoted stay total",
       shortStayPayCleaningFee: "Cleaning fee",
       shortStayPayTotalDue: "Total due that day",
+      viewAmountsIn: "View amounts in",
+      fxApprox: "(Approx. rate: 1 USD = {{rate}} MXN)",
       shortStayPaySigningDate: "Expected check-in and signing date",
     },
     profile: {
@@ -393,7 +395,7 @@ export const en: MessageTree = {
     intro:
       "Thank you for staying with us! Your feedback helps us improve the experience for future guests.",
     langHint:
-      "Tip: use the Language menu in the navigation bar to switch between English and Spanish.",
+      "Use the language buttons under the title to switch between English and Spanish.",
     loading: "Loading…",
     loadError: "We could not load this survey. Check the link or try again later.",
     notFound: "This survey link is not valid.",
@@ -826,6 +828,8 @@ export const es: MessageTree = {
       shortStayPayQuotedTotal: "Total cotizado de la estancia",
       shortStayPayCleaningFee: "Tarifa de limpieza",
       shortStayPayTotalDue: "Total a pagar ese día",
+      viewAmountsIn: "Ver montos en",
+      fxApprox: "(Tipo de cambio aprox.: 1 USD = {{rate}} MXN)",
       shortStayPaySigningDate: "Fecha prevista de entrada y firma del contrato",
     },
     profile: {
@@ -844,7 +848,7 @@ export const es: MessageTree = {
     intro:
       "¡Gracias por hospedarte con nosotros! Tu opinión nos ayuda a mejorar la experiencia de futuros huéspedes.",
     langHint:
-      "Tip: usa el menú Idioma en la barra de navegación para cambiar entre español e inglés.",
+      "Usa los botones de idioma debajo del título para cambiar entre español e inglés.",
     loading: "Cargando…",
     loadError:
       "No pudimos cargar esta encuesta. Revisa el enlace o intenta más tarde.",

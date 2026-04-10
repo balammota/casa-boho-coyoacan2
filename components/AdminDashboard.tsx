@@ -769,22 +769,12 @@ export function AdminDashboard() {
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="font-mono text-sm text-[var(--charcoal)]">{r.public_id}</p>
-                  <div className="flex items-center gap-3">
-                    <a
-                      href={`/admin/reservations/${r.id}`}
-                      className="text-xs font-semibold text-[var(--charcoal)] underline"
-                    >
-                      Ver detalle
-                    </a>
-                    <a
-                      href={`/api/contracts/${r.id}/pdf`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs font-semibold text-[var(--gold)] underline"
-                    >
-                      Descargar contrato PDF
-                    </a>
-                  </div>
+                  <a
+                    href={`/admin/reservations/${r.id}`}
+                    className="text-xs font-semibold text-[var(--charcoal)] underline"
+                  >
+                    Ver detalle
+                  </a>
                 </div>
                 <p className="mt-1 text-sm text-[var(--charcoal)]/80">
                   {r.guest_name} · {r.guest_email} · {r.guest_phone}
@@ -808,7 +798,16 @@ export function AdminDashboard() {
                   <a href={`/admin/reservations/${r.id}#documentos-huesped`} className="underline">
                     Documentos: {r.guest_document_count ?? 0}
                   </a>
+                  {" · "}
+                  <a href={`/admin/reservations/${r.id}#encuesta-satisfaccion`} className="underline">
+                    Encuesta satisfacción
+                  </a>
                 </p>
+                {r.booking_status === "completed" ? (
+                  <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                    Reservación completada
+                  </p>
+                ) : null}
                 <div className="mt-3 flex flex-wrap gap-2">
                   {r.booking_status !== "confirmed" &&
                   r.booking_status !== "completed" &&
@@ -821,7 +820,7 @@ export function AdminDashboard() {
                       Confirmar estancia
                     </button>
                   ) : null}
-                  {(r.booking_status === "confirmed" || r.booking_status === "completed") &&
+                  {r.booking_status === "confirmed" &&
                   r.payment_status !== "confirmed" &&
                   r.payment_status !== "cancelled" ? (
                     <button
@@ -832,7 +831,7 @@ export function AdminDashboard() {
                       Confirmar pago
                     </button>
                   ) : null}
-                  {r.booking_status !== "cancelled" ? (
+                  {r.booking_status !== "cancelled" && r.booking_status !== "completed" ? (
                     <button
                       type="button"
                       onClick={() => {

@@ -178,6 +178,96 @@ async function sendGuestPortalEmail(args: {
   });
 }
 
+async function sendHostInquiryEmail(args: {
+  requestUrl: string;
+  reservationId: string;
+  guestName: string;
+  guestEmail: string;
+  guestPhone: string;
+  message: string;
+  checkIn: string;
+  checkOut: string;
+  nights: number;
+  guests: number;
+  currency: "MXN" | "USD";
+  total: number;
+  publicId: string;
+}) {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  const from = process.env.RESEND_FROM_EMAIL?.trim();
+  const to = process.env.BOOKING_INBOX_EMAIL?.trim();
+  if (!apiKey || !from || !to) return;
+
+  const fmt = new Intl.NumberFormat(args.currency === "USD" ? "en-US" : "es-MX", {
+    style: "currency",
+    currency: args.currency,
+    maximumFractionDigits: 0,
+  });
+  const total = fmt.format(args.total);
+  const msg = args.message.trim();
+  const resend = new Resend(apiKey);
+  const adminLink = `${new URL(args.requestUrl).origin}/admin/reservations/${args.reservationId}`;
+
+  const text = [
+    "Nueva solicitud inicial (inquiry) — Casa Boho Coyoacan",
+    "",
+    `Codigo: ${args.publicId}`,
+    `Nombre: ${args.guestName}`,
+    `Email: ${args.guestEmail}`,
+    `Telefono: ${args.guestPhone}`,
+    ...(msg ? ["", "Mensaje:", msg] : []),
+    "",
+    "---",
+    `Check-in: ${args.checkIn}`,
+    `Check-out: ${args.checkOut}`,
+    `Noches: ${args.nights}`,
+    `Huespedes: ${args.guests}`,
+    `Total estimado: ${total} (${args.currency})`,
+    "",
+    `Ver solicitud en admin: ${adminLink}`,
+    "",
+    `Responde a este correo para contactar a ${args.guestEmail}.`,
+  ].join("\n");
+
+  const html = `
+    <h2>Casa Boho Coyoacan</h2>
+    <p><strong>Nueva solicitud inicial (inquiry)</strong></p>
+    <p>
+      <strong>Codigo:</strong> ${escapeHtml(args.publicId)}<br/>
+      <strong>Nombre:</strong> ${escapeHtml(args.guestName)}<br/>
+      <strong>Email:</strong> <a href="mailto:${escapeHtml(args.guestEmail)}">${escapeHtml(args.guestEmail)}</a><br/>
+      <strong>Telefono:</strong> ${escapeHtml(args.guestPhone)}
+    </p>
+    ${
+      msg
+        ? `<p><strong>Mensaje:</strong><br/>${escapeHtml(msg).replace(/\n/g, "<br/>")}</p>`
+        : ""
+    }
+    <hr style="border:none;border-top:1px solid #eae0e0" />
+    <p>
+      <strong>Check-in:</strong> ${escapeHtml(args.checkIn)}<br/>
+      <strong>Check-out:</strong> ${escapeHtml(args.checkOut)}<br/>
+      <strong>Noches:</strong> ${args.nights}<br/>
+      <strong>Huespedes:</strong> ${args.guests}<br/>
+      <strong>Total estimado:</strong> ${escapeHtml(total)} (${args.currency})
+    </p>
+    <p style="margin-top: 18px;">
+      <a href="${escapeHtml(adminLink)}" style="display:inline-block;background:#363636;color:#ffffff;text-decoration:none;padding:10px 16px;border-radius:999px;font-weight:600;">
+        Ver solicitud en Admin
+      </a>
+    </p>
+  `.trim();
+
+  await resend.emails.send({
+    from,
+    to: [to],
+    replyTo: args.guestEmail,
+    subject: `Inquiry nueva — ${args.guestName} — ${args.publicId}`,
+    text,
+    html,
+  });
+}
+
 export async function POST(request: Request) {
   const originErr = assertSameOrigin(request);
   if (originErr) return originErr;
@@ -304,6 +394,26 @@ export async function POST(request: Request) {
     });
   } catch (emailErr) {
     console.error("[reservations/pre-request] guest email error:", emailErr);
+  }
+
+  try {
+    await sendHostInquiryEmail({
+      requestUrl: request.url,
+      reservationId: reservation.id,
+      guestName: body.name,
+      guestEmail: body.email,
+      guestPhone: body.phone,
+      message: body.message,
+      checkIn: body.checkIn,
+      checkOut: body.checkOut,
+      nights: quote.nights,
+      guests: body.guests,
+      currency: body.currency,
+      total: quote.total,
+      publicId: reservation.public_id,
+    });
+  } catch (emailErr) {
+    console.error("[reservations/pre-request] host inbox email error:", emailErr);
   }
 
   return NextResponse.json({ ok: true, reservation });

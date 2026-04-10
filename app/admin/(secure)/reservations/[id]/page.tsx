@@ -12,6 +12,20 @@ function formatBytes(n: number): string {
   return `${(n / 1024 / 1024).toFixed(1)} MB`;
 }
 
+function surveyRatingLabel(kind: "overall" | "clean" | "comfort" | "recommend", n: number): string {
+  const v = Number.isFinite(n) ? Math.max(1, Math.min(5, Math.round(n))) : 1;
+  if (kind === "overall") {
+    return ["Muy mala", "Mala", "Regular", "Buena", "Excelente"][v - 1];
+  }
+  if (kind === "clean") {
+    return ["Muy mal", "Mal", "Aceptable", "Limpio", "Muy limpio"][v - 1];
+  }
+  if (kind === "comfort") {
+    return ["Muy incómodo", "Incómodo", "Regular", "Cómodo", "Muy cómodo"][v - 1];
+  }
+  return ["Definitivamente no", "Probablemente no", "Tal vez", "Probablemente sí", "Definitivamente sí"][v - 1];
+}
+
 export default async function AdminReservationDetailPage({
   params,
 }: {
@@ -63,6 +77,24 @@ export default async function AdminReservationDetailPage({
     );
   }
 
+  type SurveyRow = {
+    id: string;
+    rating_overall: number;
+    rating_clean: number;
+    rating_comfort: number;
+    rating_recommend: number;
+    comments: string;
+    consent_publish: boolean | null;
+    created_at: string;
+  };
+  const { data: survey, error: surveyErr } = await supabase
+    .from("guest_stay_surveys")
+    .select(
+      "id, rating_overall, rating_clean, rating_comfort, rating_recommend, comments, consent_publish, created_at"
+    )
+    .eq("reservation_id", params.id)
+    .maybeSingle<SurveyRow>();
+
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
       <p className="text-xs uppercase tracking-[0.2em] text-[var(--gold)]">
@@ -90,6 +122,11 @@ export default async function AdminReservationDetailPage({
         <p>Contrato: {reservation.contract_type}</p>
         <p>Estado del pago: {reservation.payment_status}</p>
         <p>Estado de la reserva: {reservation.booking_status}</p>
+        <p className="mt-3">
+          <a href="#encuesta-satisfaccion" className="text-[var(--gold)] underline">
+            Ver respuestas de encuesta de satisfacción
+          </a>
+        </p>
       </div>
 
       <section
@@ -146,6 +183,65 @@ export default async function AdminReservationDetailPage({
               </li>
             ))}
           </ul>
+        )}
+      </section>
+
+      <section
+        id="encuesta-satisfaccion"
+        className="mt-8 scroll-mt-24 rounded-2xl border border-[var(--dove-grey)]/70 bg-white p-5 text-sm"
+      >
+        <h2 className="font-[family-name:var(--heading-font)] text-lg font-semibold text-[var(--charcoal)]">
+          Encuesta de satisfacción
+        </h2>
+        {surveyErr ? (
+          <p className="mt-3 text-xs text-amber-800/90">
+            No se pudieron cargar respuestas. Verifica que esté aplicada la migración{" "}
+            <code className="rounded bg-black/5 px-1">010_guest_stay_surveys</code>.
+          </p>
+        ) : !survey ? (
+          <p className="mt-3 text-sm text-[var(--charcoal)]/60">
+            Este huésped todavía no ha respondido la encuesta.
+          </p>
+        ) : (
+          <div className="mt-4 space-y-3">
+            <p className="text-xs text-[var(--charcoal)]/60">
+              Respondida el{" "}
+              {new Date(survey.created_at).toLocaleString("es-MX", {
+                dateStyle: "medium",
+                timeStyle: "short",
+              })}
+            </p>
+            <ul className="space-y-2 rounded-xl border border-[var(--dove-grey)]/40 bg-[var(--ivory)]/45 p-4">
+              <li>
+                <strong>1) Estancia general:</strong> {survey.rating_overall}/5 ·{" "}
+                {surveyRatingLabel("overall", survey.rating_overall)}
+              </li>
+              <li>
+                <strong>2) Limpieza:</strong> {survey.rating_clean}/5 ·{" "}
+                {surveyRatingLabel("clean", survey.rating_clean)}
+              </li>
+              <li>
+                <strong>3) Comodidad:</strong> {survey.rating_comfort}/5 ·{" "}
+                {surveyRatingLabel("comfort", survey.rating_comfort)}
+              </li>
+              <li>
+                <strong>4) Recomendación:</strong> {survey.rating_recommend}/5 ·{" "}
+                {surveyRatingLabel("recommend", survey.rating_recommend)}
+              </li>
+              <li>
+                <strong>5) Comentarios:</strong>{" "}
+                {survey.comments?.trim() ? survey.comments : "Sin comentarios."}
+              </li>
+              <li>
+                <strong>Permiso para publicar reseña:</strong>{" "}
+                {survey.consent_publish === null
+                  ? "Sin respuesta"
+                  : survey.consent_publish
+                    ? "Sí"
+                    : "No"}
+              </li>
+            </ul>
+          </div>
         )}
       </section>
 

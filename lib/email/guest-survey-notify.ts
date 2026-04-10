@@ -16,14 +16,12 @@ function surveyUrl(request: Request, publicId: string): string {
     origin =
       process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
   }
-  const enc = encodeURIComponent(publicId);
-  return `${origin}/survey/${enc}`;
+  return `${origin}/survey/${encodeURIComponent(publicId)}`;
 }
 
 /**
- * Correo al marcar la estancia como completada (admin). Enlace a encuesta pública;
- * el huésped puede elegir español/inglés en la barra del sitio.
- * Best-effort si falta Resend.
+ * Respaldo / uso puntual. El flujo admin usa `sendGuestReservationNotify` con
+ * `stay_completed_survey`. Mismo tono transaccional aquí por consistencia.
  */
 export async function sendGuestStaySurveyEmail(args: {
   request: Request;
@@ -38,41 +36,24 @@ export async function sendGuestStaySurveyEmail(args: {
   }
 
   const link = surveyUrl(args.request, args.publicId);
-  const nameEs = args.guestName.trim() || "estimado huésped";
-  const nameEn = args.guestName.trim() || "guest";
+  const name = args.guestName.trim() || "estimado huésped";
 
-  const subject = `Encuesta de satisfacción · Satisfaction survey · ${args.publicId} · Casa Boho`;
-
+  const subject = `Reservación ${args.publicId}: estancia finalizada — Casa Boho Coyoacán`;
   const text = [
-    `Hola ${nameEs},`,
+    `Hola ${name},`,
     "",
-    "Gracias por hospedarte con nosotros. Nos encantaría conocer tu opinión en una encuesta breve (5 preguntas).",
-    "Puedes abrirla en el idioma que prefieras usando el selector de idioma en la parte superior de la página.",
+    `Tu reservación ${args.publicId} quedó registrada como finalizada por el anfitrión.`,
+    "Si puedes dedicar un minuto, este enlace abre un formulario breve (5 preguntas) para comentar tu experiencia:",
     link,
     "",
-    "---",
-    "",
-    `Hi ${nameEn},`,
-    "",
-    "Thank you for staying with us. We'd love your feedback in a short survey (5 questions).",
-    "Open the link and choose Spanish or English using the language selector at the top of the page.",
-    link,
-    "",
-    "Casa Boho Coyoacán / Casa Boho Coyoacan",
+    "Casa Boho Coyoacán",
   ].join("\n");
 
-  const html = `
-    <h2>Casa Boho Coyoacán</h2>
-    <p>Hola ${escapeHtml(nameEs)},</p>
-    <p>Gracias por hospedarte con nosotros. Nos encantaría conocer tu opinión en una <strong>encuesta breve (5 preguntas)</strong>.</p>
-    <p>En la página puedes cambiar el idioma (español / inglés) con el selector superior del sitio.</p>
-    <p><a href="${escapeHtml(link)}">Responder encuesta</a></p>
-    <hr style="margin:24px 0;border:none;border-top:1px solid #ddd" />
-    <p>Hi ${escapeHtml(nameEn)},</p>
-    <p>Thank you for staying with us. We'd love your feedback in a <strong>short survey (5 questions)</strong>.</p>
-    <p>On the page you can switch language (Spanish / English) using the site’s language selector at the top.</p>
-    <p><a href="${escapeHtml(link)}">Take the survey</a></p>
-  `.trim();
+  const html = `<p style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.5;color:#363636">Hola ${escapeHtml(name)},</p>
+<p style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.5;color:#363636">Tu reservación <strong>${escapeHtml(args.publicId)}</strong> quedó registrada como finalizada por el anfitrión.</p>
+<p style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.5;color:#363636">Si puedes dedicar un minuto, este enlace abre un formulario breve (5 preguntas) para comentar tu experiencia:</p>
+<p style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.5;color:#363636"><a href="${escapeHtml(link)}">${escapeHtml(link)}</a></p>
+<p style="font-family:system-ui,sans-serif;font-size:14px;line-height:1.5;color:#555">Casa Boho Coyoacán</p>`.trim();
 
   try {
     const resend = new Resend(apiKey);
